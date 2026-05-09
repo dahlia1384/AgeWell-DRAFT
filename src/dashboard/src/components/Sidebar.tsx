@@ -4,6 +4,7 @@ const links = [
   { to: '/dashboard', label: 'Dashboard',  icon: '▦' },
   { to: '/residents', label: 'Residents',  icon: '♾' },
   { to: '/alerts',    label: 'Alerts',     icon: '⚑' },
+  { to: '/ai',        label: 'AI Assistant', icon: '✦' },
 ];
 
 export default function Sidebar() {

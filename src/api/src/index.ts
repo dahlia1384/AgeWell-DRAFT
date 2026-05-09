@@ -5,6 +5,7 @@ import residentsRouter from './routes/residents';
 import logsRouter from './routes/logs';
 import alertsRouter from './routes/alerts';
 import staffRouter from './routes/staff';
+import aiRouter from './routes/ai';
 
 applySchema();
 
@@ -22,6 +23,7 @@ app.use('/api/residents', residentsRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/staff', staffRouter);
+app.use('/api/ai', aiRouter);
 
 app.listen(PORT, () => {
   console.log(`AgeWell API running on http://localhost:${PORT}`);

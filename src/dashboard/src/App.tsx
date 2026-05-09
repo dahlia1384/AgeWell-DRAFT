@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import ResidentList from './pages/ResidentList';
 import ResidentDetail from './pages/ResidentDetail';
 import AlertsFeed from './pages/AlertsFeed';
+import AIAssistant from './pages/AIAssistant';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
             <Route path="/residents" element={<ResidentList />} />
             <Route path="/residents/:id" element={<ResidentDetail />} />
             <Route path="/alerts" element={<AlertsFeed />} />
+            <Route path="/ai" element={<AIAssistant />} />
           </Routes>
         </main>
       </div>
