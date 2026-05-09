@@ -48,8 +48,8 @@ AgeWell uses facility-provided data to give an AI agent accurate, per-resident c
 
 | Layer | Technology |
 |---|---|
-| API server | Node.js · Express · TypeScript |
-| Database | SQLite via `node:sqlite` (built-in, zero native deps) |
+| API server | Node.js · Express · TypeScript **or** Python · FastAPI · uvicorn |
+| Database | SQLite (shared by both backends) |
 | Staff dashboard | React 18 · Vite · TypeScript · Tailwind CSS |
 | AI agent *(Phase 2)* | Claude API — per-resident system prompts, 7-day rolling context |
 | Resident UI *(Phase 3)* | Tablet-first · large fonts · voice input · high contrast |
@@ -131,27 +131,48 @@ Each tab shows today's existing entries and a form to add a new one.
 
 ## Getting started
 
-**Prerequisites:** Node.js v22 or higher (uses `node:sqlite` built-in)
+**Prerequisites:** Node.js v22+ · Python 3.9+ · an Anthropic API key (for Phase 2 AI features)
+
+### Option A — Node.js backend (default)
 
 ```bash
-# Clone the repo
 git clone https://github.com/dahlia1384/AgeWell-DRAFT.git
 cd AgeWell-DRAFT
 
-# Install dependencies
+# Install and seed
 cd src/api && npm install
-cd ../dashboard && npm install
+npm run db:seed          # 1 facility · 3 staff · 3 residents · 2 alerts
 
-# Seed the database
-# Creates: 1 facility, 3 staff, 3 residents, sample logs, 2 open alerts
-cd ../api && npm run db:seed
+# Copy env and add your Anthropic key
+cp .env.example .env
 
-# Start the API (terminal 1)
-npm run dev        # → http://localhost:3001
+# Start API on :3001 (terminal 1)
+npm run dev
 
-# Start the dashboard (terminal 2)
-cd ../dashboard && npm run dev  # → http://localhost:5173
+# Start dashboard on :5173 (terminal 2)
+cd ../dashboard && npm install && npm run dev
 ```
+
+### Option B — Python backend (FastAPI)
+
+```bash
+# Install Python deps
+cd src/api-python && pip install -r requirements.txt
+
+# Seed the database (skip if already seeded by Node.js)
+python db/seed.py
+
+# Copy env and add your Anthropic key
+cp .env.example .env
+
+# Start API on :3002 (terminal 1)
+python -m uvicorn main:app --port 3002 --reload
+
+# Start dashboard pointing to Python backend (terminal 2)
+cd ../dashboard && VITE_API_PORT=3002 npm run dev
+```
+
+Both backends share the same SQLite database at `data/agewell.db`. Auto-generated API docs for the Python backend are available at `http://localhost:3002/docs`.
 
 The seed script creates three realistic residents with diagnoses, standing medications, allergies, and emergency contacts — ready to explore all dashboard features immediately.
 
@@ -202,7 +223,7 @@ Full guidelines: [docs/ethical-guidelines.md](docs/ethical-guidelines.md)
 ```
 AgeWell-DRAFT/
 ├── src/
-│   ├── api/                    Node.js + Express backend
+│   ├── api/                    Node.js + Express backend (port 3001)
 │   │   └── src/
 │   │       ├── index.ts        Server entry point
 │   │       ├── types.ts        Shared TypeScript interfaces
@@ -210,20 +231,41 @@ AgeWell-DRAFT/
 │   │       │   ├── schema.sql  Database schema (11 tables)
 │   │       │   ├── client.ts   SQLite connection
 │   │       │   └── seed.ts     Sample data
-│   │       └── routes/
-│   │           ├── residents.ts
-│   │           ├── logs.ts
-│   │           ├── alerts.ts
-│   │           └── staff.ts
+│   │       ├── routes/
+│   │       │   ├── residents.ts
+│   │       │   ├── logs.ts
+│   │       │   ├── alerts.ts
+│   │       │   └── staff.ts
+│   │       └── ai/
+│   │           ├── context.ts  Per-resident prompt context builder
+│   │           └── agent.ts    Claude API calls (summary, chat, care note)
+│   ├── api-python/             Python + FastAPI backend (port 3002)
+│   │   ├── main.py             FastAPI app entry point
+│   │   ├── models.py           Pydantic request/response models
+│   │   ├── requirements.txt
+│   │   ├── db/
+│   │   │   ├── client.py       SQLite connection + FastAPI dependency
+│   │   │   └── seed.py         Sample data
+│   │   ├── routes/
+│   │   │   ├── residents.py
+│   │   │   ├── logs.py
+│   │   │   ├── alerts.py
+│   │   │   ├── staff.py
+│   │   │   └── ai.py           SSE streaming chat + summary + care note
+│   │   └── ai/
+│   │       ├── context.py      Per-resident prompt context builder
+│   │       └── agent.py        Async Claude API calls
 │   └── dashboard/              React staff dashboard
 │       └── src/
 │           ├── App.tsx         Router + layout
 │           ├── types.ts        Frontend TypeScript types
 │           ├── api/client.ts   Typed API wrapper
 │           ├── components/     Sidebar, cards, stat blocks
-│           └── pages/          Dashboard, ResidentList, ResidentDetail, AlertsFeed
+│           └── pages/          Dashboard, ResidentList, ResidentDetail, AlertsFeed, AIAssistant
+├── data/                       SQLite database (gitignored)
 ├── docs/
 │   └── ethical-guidelines.md
+├── .env.example
 ├── .gitignore
 └── README.md
 ```
