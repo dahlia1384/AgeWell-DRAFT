@@ -1,0 +1,11 @@
+{
+  "name": "agewell",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:api":       "cd src/api && npm run dev",
+    "dev:dashboard": "cd src/dashboard && npm run dev",
+    "install:all":   "cd src/api && npm install && cd ../dashboard && npm install",
+    "seed":          "cd src/api && npm run db:seed"
+  }
+}
